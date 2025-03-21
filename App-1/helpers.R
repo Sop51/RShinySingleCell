@@ -32,3 +32,17 @@ generate_de_table <- function(dataset, cell_type, cell_type_meta) {
   de_table <- as.data.frame(de_table)
   return(de_table)
 }
+
+# create a helper function to create a violin plot from a meta var
+generate_violin_plot <- function(dataset, gene, meta_var){
+    plot <- VlnPlot(dataset, features = gene, group.by = meta_var)
+    return(plot)
+}
+
+# generate a umap of a specific cell type
+generate_subcluster_umap <- function(dataset, meta_var){
+  plot <- DimPlot(object = dataset,
+                  reduction = "umap", 
+                  group.by = meta_var)
+  return(plot)
+}
