@@ -6,13 +6,16 @@ library(DT)
 library(rlang)
 library(shinythemes)
 library(shinyFeedback)
+library(rsconnect)
+library(qs)
 
 # source other R scripts
 source('helpers.R')
 # define the path to the data directory
-data_dir <- "data/"
+data_dir <- "data"
 # increase the file upload size allowed
-options(shiny.maxRequestSize = 1000 * 1024^2)
+options(shiny.maxRequestSize = 4000 * 1024^2)
+
 
 # define the ui ----
 ui <- fluidPage(theme = shinytheme("yeti"),
@@ -30,11 +33,11 @@ ui <- fluidPage(theme = shinytheme("yeti"),
     tabPanel("Import Data",
        fluidRow(
          column(6, # left column for file upload and select input
-                fileInput("file_upload", "Upload dataset:", accept = c(".h5Seurat")),
+                fileInput("file_upload", "Upload dataset:", accept = c(".qs")),
                 div(style = "margin-top: -30px"), # Adjust space between elements
                 loadingButton("upload_data", "Process Dataset for Analysis", style = "width: 71%; margin: 10px auto;"),
                 
-                selectInput("file", "OR choose a dataset:", choices = list.files(data_dir, pattern = "\\.h5Seurat$", full.names = FALSE),
+                selectInput("file", "OR choose a dataset:", choices = list.files(data_dir, pattern = "\\.qs$", full.names = FALSE),
                             selected = NULL), # default empty
                 loadingButton("load_data", "Load & Process Dataset", style = "width: 71%; margin: 10px auto;")
          ),
@@ -100,11 +103,15 @@ server <- function(input,output,session){
     # ensure input is not null
     req(input$file)
     
+    if (!dir.exists("data")) {
+      dir.create("data", recursive = TRUE)
+    }
+    
     # get the file path of the chosen dataset
     dataset_path <- file.path("data/", input$file)
     
     # load the seurat object
-    seurat_obj$data <- LoadH5Seurat(dataset_path)
+    seurat_obj$data <- qread(dataset_path)
     resetLoadingButton("load_data")
 
     # get the metadata cols
@@ -122,6 +129,10 @@ server <- function(input,output,session){
   observeEvent(input$upload_data, {
     req(input$file_upload)  # ensure a file is uploaded
     
+    if (!dir.exists("data")) {
+      dir.create("data", recursive = TRUE)
+    }
+    
     # get the file path and name of the uploaded file
     file_path <- input$file_upload$datapath
     file_name <- input$file_upload$name
@@ -131,7 +142,7 @@ server <- function(input,output,session){
     file.copy(file_path, saved_file_path, overwrite = TRUE)
     
     # load the seurat object
-    seurat_obj$data <- LoadH5Seurat(saved_file_path)
+    seurat_obj$data <- qread(saved_file_path)
     resetLoadingButton("upload_data")
     
     # get the metadata cols
