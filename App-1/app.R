@@ -8,6 +8,7 @@ library(shinythemes)
 library(shinyFeedback)
 library(rsconnect)
 library(qs)
+library(shinyBS)
 
 # source other R scripts
 source('helpers.R')
@@ -31,6 +32,18 @@ ui <- fluidPage(theme = shinytheme("yeti"),
   tabsetPanel(
     # data import tab ----
     tabPanel("Import Data",
+             
+       # title and description above everything ----
+       h3("Upload or Select Dataset", 
+          style = "font-weight: bold; font-size: 20px; color: #1E3A8A; text-align: center; margin-top: 20px; margin-bottom: 15px;"),
+       
+       p("To begin analysis, upload your dataset or select an existing dataset from the list below. Then, set the appropriate metadata cell type column for analysis.",
+         style = "font-size: 15px; color: #555; text-align: center; margin-bottom: 20px;"),
+       
+       p("Note: if uploading a file, file extension must be .qs",
+         style = "font-weight: bold; font-size: 15px; color: #555; text-align: center; margin-bottom: 30px;"),
+             
+       # main layout ----
        fluidRow(
          column(6, # left column for file upload and select input
                 fileInput("file_upload", "Upload dataset:", accept = c(".qs")),
@@ -50,6 +63,15 @@ ui <- fluidPage(theme = shinytheme("yeti"),
     
     # umap tab: all cell types -----
     tabPanel("UMAP",
+       # title and description above everything ----
+       h3("Gene Expression Visualization with UMAP", 
+          style = "font-weight: bold; font-size: 20px; color: #1E3A8A; text-align: center; margin-top: 20px; margin-bottom: 15px;"),
+       
+       p("In this section, you can enter a gene of interest to visualize its expression across different cells using UMAP. 
+          The generated UMAP plot will show how the gene is distributed across the dataset, helping you to identify clusters or patterns of gene expression.",
+         style = "font-size: 15px; color: #555; text-align: center; margin-bottom: 30px;"),
+       
+       # main layout - sidebar and main panel ----      
       sidebarLayout(
         sidebarPanel(
           textInput("gene", "Enter a gene of interest:", placeholder = "Type gene name..."),
@@ -57,35 +79,97 @@ ui <- fluidPage(theme = shinytheme("yeti"),
           ),
           mainPanel(
             plotOutput("feature_plot"),  
-            plotOutput("umap_plot")     
+            plotOutput("umap_plot") 
         )
       )
     ),
     
     # differential expression table: all cell types ----
     tabPanel("Differential Expression",
-      sidebarLayout(
-        sidebarPanel(
-          selectInput("cell.type.DE", "Choose a cell type:", choices = NULL), # default empty
-          actionButton("display.de.table", "Display Table")
-        ),
-        mainPanel(
-          DT::dataTableOutput("de_table")
-        )
-      )),
+       # title and description above everything ----
+       h3("Differential Expression Analysis", 
+          style = "font-weight: bold; font-size: 20px; color: #1E3A8A; text-align: center; margin-top: 20px; margin-bottom: 15px;"),
+       
+       p("In this section, you can compare gene expression in the selected cell type to all other cell types in the dataset. 
+       Use the controls to select a cell type and view the corresponding differential expression table for detailed insights.",
+         style = "font-size: 15px; color: #555; text-align: center; margin-bottom: 30px;"),
+       
+       # main layout - sidebar and main panel ----
+       sidebarLayout(
+         sidebarPanel(
+           selectInput("cell.type.DE", "Choose a cell type:", choices = NULL), # default empty
+           actionButton("display.de.table", "Display Table"),
+           hr(),  # Horizontal line for separation
+           h4("How to interpret this table:", 
+              style = "font-weight: bold; margin-bottom: 6px; font-size: 15px;"),
+           # how to interpret the table
+           tags$ul(
+             tags$li(tags$b("p_val:"), " The statistical significance of the gene’s differential expression in the selected cell type compared to all others."),
+             tags$li(tags$b("avg_log2FC:"), " The average log2 fold change in gene expression between the selected cell type and other cell types."),
+             tags$li(tags$b("pct.1:"), " The percentage of cells in the selected cell type that express the gene."),
+             tags$li(tags$b("pct.2:"), " The percentage of cells in all other cell types that express the gene."),
+             tags$li(tags$b("p_val_adj:"), " The adjusted p-value, corrected for multiple testing.")
+           ),
+         ),
+         mainPanel(
+           DT::dataTableOutput("de_table")
+         )
+       )
+    ),
+    
     
     tabPanel("Cell Type Specific",
+     # title and description above everything ----
+     h3("Cell Type Specific Analysis", 
+        style = "font-weight: bold; font-size: 20px; color: #1E3A8A; text-align: center; margin-top: 20px; margin-bottom: 15px;"),
+     
+     p("This section allows you to explore gene expression patterns for specific cell types. 
+        Choose a cell type, enter a gene of interest, and customize the data groupings to visualize the results.",
+       style = "font-size: 15px; color: #555; text-align: center; margin-bottom: 20px;"),
+     
+     p("Note: You must select the cell type metadata column in the Import Data tab to use this feature",
+       style = "font-weight: bold; font-size: 15px; color: #555; text-align: center; margin-bottom: 30px;"),
+     
+     # main layout - sidebar and main panel ----
       sidebarLayout(
         sidebarPanel(
           selectInput("cell.type.subcluster", "Choose a cell type:", choices = NULL), # default empty
           textInput("gene.subcluster", "Enter a gene of interest:", placeholder = "Type gene name..."),
-          radioButtons("non.zero", "Display cells with non-zero expression of selected gene?", choices = list("Yes" = 1, "No" = 2),
-                       selected = 1),
-          selectInput("meta.subcluster", "Choose a metadata column to group by:", choices = NULL), # default empty
-          actionButton("display.subcluster", "Submit")
+          # Wrap the radio button and info icon together for alignment
+          tags$div(
+            style = "display: flex; align-items: center;",
+            radioButtons("non.zero", 
+                         "Display cells with non-zero expression of selected gene?", 
+                         choices = list("Yes" = 1, "No" = 2), 
+                         selected = 1),
+            tags$i(class = "fa fa-info-circle", 
+                   id = "info_non_zero", 
+                   style = "margin-left: 5px; cursor: pointer; font-size: 16px; color: #007BFF;")
+          ),
+          
+          # Tooltip for the radio button info icon
+          bsTooltip("info_non_zero", 
+                    "Select whether to display only cells with non-zero expression of the selected gene in the violin plot.",
+                    placement = "right", trigger = "hover"),
+          
+
+          # wrap the dropdown and info icon together for alignment
+          tags$div(
+            style = "display: flex; align-items: center;",
+            selectInput("meta.subcluster", "Choose a metadata column to group by:", choices = NULL), # default empty
+            tags$i(class = "fa fa-info-circle", 
+                   id = "info_meta", 
+                   style = "margin-left: 5px; cursor: pointer; font-size: 16px; color: #007BFF;")
+          ),
+          actionButton("display.subcluster", "Submit"),
+          # define tooltip content
+          bsTooltip("info_meta", 
+                    "Select a metadata column (e.g., treatment, timepoint) to group/label the data in visualizations.", 
+                    placement = "right", trigger = "hover")
         ),
         mainPanel(
-          plotOutput("umap.subcluster"),  
+          plotOutput("umap.subcluster"),
+          plotOutput("umap.gene.subcluster"),
           plotOutput("violin.subcluster")  
         )
       )
@@ -153,7 +237,7 @@ server <- function(input,output,session){
     # update the group by col in the subcluster tab
     updateSelectInput(session, "meta.subcluster", choices = metacols)
   
-    # Update the selectInput choices to include the newly uploaded file
+    # update the selectInput choices to include the newly uploaded file
     showNotification("File uploaded successfully!", type = "message")
   })
   
@@ -254,6 +338,11 @@ server <- function(input,output,session){
     # render the umap for a subcluster
     output$umap.subcluster <- renderPlot({
       generate_subcluster_umap(subset, group_by)
+    })
+    
+    # render the umap for a gene in the subcluster
+    output$umap.gene.subcluster <- renderPlot({
+      generate_subcluster_featureplot(subset, gene_selected)
     })
   })
 }

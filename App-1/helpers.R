@@ -1,5 +1,6 @@
 library(Seurat)
 library(SeuratDisk)
+library(ggplot2)
 
 # create a function to generate a feature plot for a certain gene
 generate_feature_plot <- function(dataset, gene){
@@ -44,5 +45,16 @@ generate_subcluster_umap <- function(dataset, meta_var){
   plot <- DimPlot(object = dataset,
                   reduction = "umap", 
                   group.by = meta_var)
+  return(plot)
+}
+
+# generate subcluster feature plot
+generate_subcluster_featureplot <- function(dataset, gene){
+  # code to create the plot
+  plot <- FeaturePlot(object = dataset, 
+                      features = c(gene),
+                      order = TRUE,
+                      min.cutoff = 'q10', 
+                      repel = TRUE)
   return(plot)
 }
