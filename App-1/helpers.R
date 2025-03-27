@@ -58,3 +58,11 @@ generate_subcluster_featureplot <- function(dataset, gene){
                       repel = TRUE)
   return(plot)
 }
+
+# function to create a cell type count summary table
+cell_type_count <- function(dataset, cell_type_col){
+  cell_type_counts <- table(dataset[[cell_type_col]])
+  cell_type_counts_df <- as.data.frame(cell_type_counts)
+  colnames(cell_type_counts_df) <- c("Cell Type", "Cell Count")
+  return(cell_type_counts_df)
+}

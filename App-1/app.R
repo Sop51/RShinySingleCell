@@ -37,17 +37,20 @@ ui <- fluidPage(theme = shinytheme("yeti"),
        h3("Upload or Select Dataset", 
           style = "font-weight: bold; font-size: 20px; color: #1E3A8A; text-align: center; margin-top: 20px; margin-bottom: 15px;"),
        
-       p("To begin analysis, upload your dataset or select an existing dataset from the list below. Then, set the appropriate metadata cell type column for analysis.",
+       p("To begin analysis, upload your annotated single cell dataset or select an existing dataset from the list below. Then, set the appropriate cell type column within the metadata for analysis.",
          style = "font-size: 15px; color: #555; text-align: center; margin-bottom: 20px;"),
        
        p("Note: if uploading a file, file extension must be .qs",
          style = "font-weight: bold; font-size: 15px; color: #555; text-align: center; margin-bottom: 30px;"),
+       
+       # line break here
+       hr(style = "border: 1px solid #ccc; margin-top: 20px; margin-bottom: 20px;"), 
              
        # main layout ----
        fluidRow(
          column(6, # left column for file upload and select input
                 fileInput("file_upload", "Upload dataset:", accept = c(".qs")),
-                div(style = "margin-top: -30px"), # Adjust space between elements
+                div(style = "margin-top: -30px"), # adjust space between elements
                 loadingButton("upload_data", "Process Dataset for Analysis", style = "width: 71%; margin: 10px auto;"),
                 
                 selectInput("file", "OR choose a dataset:", choices = list.files(data_dir, pattern = "\\.qs$", full.names = FALSE),
@@ -56,7 +59,8 @@ ui <- fluidPage(theme = shinytheme("yeti"),
          ),
          column(6, # right column for metadata cell type selection
                 selectInput("cell.type.meta", "Choose the metadata cell type column:", choices = NULL), # default empty
-                actionButton("set_cell_type", "Set Cell Type Column")
+                actionButton("set_cell_type", "Set Cell Type Column"),
+                DT::dataTableOutput("cell_type_table")
          )
        ),
     ),
@@ -70,6 +74,9 @@ ui <- fluidPage(theme = shinytheme("yeti"),
        p("In this section, you can enter a gene of interest to visualize its expression across different cells using UMAP. 
           The generated UMAP plot will show how the gene is distributed across the dataset, helping you to identify clusters or patterns of gene expression.",
          style = "font-size: 15px; color: #555; text-align: center; margin-bottom: 30px;"),
+       
+       # line break here
+       hr(style = "border: 1px solid #ccc; margin-top: 20px; margin-bottom: 20px;"), 
        
        # main layout - sidebar and main panel ----      
       sidebarLayout(
@@ -93,6 +100,9 @@ ui <- fluidPage(theme = shinytheme("yeti"),
        p("In this section, you can compare gene expression in the selected cell type to all other cell types in the dataset. 
        Use the controls to select a cell type and view the corresponding differential expression table for detailed insights.",
          style = "font-size: 15px; color: #555; text-align: center; margin-bottom: 30px;"),
+       
+       # line break here
+       hr(style = "border: 1px solid #ccc; margin-top: 20px; margin-bottom: 20px;"), 
        
        # main layout - sidebar and main panel ----
        sidebarLayout(
@@ -130,6 +140,9 @@ ui <- fluidPage(theme = shinytheme("yeti"),
      p("Note: You must select the cell type metadata column in the Import Data tab to use this feature",
        style = "font-weight: bold; font-size: 15px; color: #555; text-align: center; margin-bottom: 30px;"),
      
+     # line break here
+     hr(style = "border: 1px solid #ccc; margin-top: 20px; margin-bottom: 20px;"), 
+     
      # main layout - sidebar and main panel ----
       sidebarLayout(
         sidebarPanel(
@@ -139,7 +152,7 @@ ui <- fluidPage(theme = shinytheme("yeti"),
           tags$div(
             style = "display: flex; align-items: center;",
             radioButtons("non.zero", 
-                         "Display cells with non-zero expression of selected gene?", 
+                         "Display cells with zero expression of selected gene?", 
                          choices = list("Yes" = 1, "No" = 2), 
                          selected = 1),
             tags$i(class = "fa fa-info-circle", 
@@ -149,7 +162,7 @@ ui <- fluidPage(theme = shinytheme("yeti"),
           
           # Tooltip for the radio button info icon
           bsTooltip("info_non_zero", 
-                    "Select whether to display only cells with non-zero expression of the selected gene in the violin plot.",
+                    "Choose whether to display only cells with non-zero expression of the selected gene in the violin plot.",
                     placement = "right", trigger = "hover"),
           
 
@@ -258,6 +271,16 @@ server <- function(input,output,session){
     Idents(seurat_obj$data) <- input$cell.type.meta
     
     showNotification("Cell type column set!", type = "message")
+    
+    # show a summary of the cell types
+    output$cell_type_table <- DT::renderDT({
+      df <- cell_type_count(seurat_obj$data, cell.col)
+      DT::datatable(df, options = list(
+        searching = FALSE,   # enable searching
+        paging = FALSE,      # enable pagination
+        scrollX = TRUE      # allow horizontal scrolling
+      ), rownames = FALSE)
+    })
   })
   
   # generate umap plots ----
