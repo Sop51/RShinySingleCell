@@ -48,19 +48,32 @@ ui <- fluidPage(theme = shinytheme("yeti"),
              
        # main layout ----
        fluidRow(
-         column(6, # left column for file upload and select input
+         column(6,
                 fileInput("file_upload", "Upload dataset:", accept = c(".qs", ".h5Seurat")),
-                div(style = "margin-top: -30px"), # adjust space between elements
+                div(style = "margin-top: -30px"),
                 p("Please wait for data to finish upload before processing",
-                  style = "font-size: 10px; font-weight: bold; margin-top: 30px;"),
-                loadingButton("upload_data", "Process Dataset for Analysis", style = "width: 71%; margin: 8px auto;"),
-                
-                selectInput("file", "OR choose a dataset:", choices = list.files(data_dir, pattern = "\\.qs$|\\.h5Seurat$", full.names = FALSE),
-                            selected = NULL), # default empty
-                loadingButton("load_data", "Load & Process Dataset", style = "width: 71%; margin: 10px auto;")
+                  style = "font-size: 10px; font-weight: bold; margin-top: 5px;"),
+                # buttons in the same row
+                fluidRow(
+                  column(9,
+                         loadingButton("upload_data", "Process Dataset for Analysis",
+                                       style = "width: 100%; margin: 8px 0;")
+                  ),
+                  column(3,
+                         div(style = "margin-left: -20px; margin-top: 20px;",
+                             loadingButton("cancel_button", "Cancel",
+                                           style = "width: 70%; font-size: 11px; padding: 4px 6px; background-color: #f8d7da; color: #721c24; border-color: #f5c6cb;")
+                         )
+                  )
+                ),
+                selectInput("file", "OR choose a dataset:",
+                            choices = list.files(data_dir, pattern = "\\.qs$|\\.h5Seurat$", full.names = FALSE),
+                            selected = NULL),
+                loadingButton("load_data", "Load & Process Dataset",
+                              style = "width: 71%; margin: 10px auto;")
          ),
-         column(6, # right column for metadata cell type selection
-                selectInput("cell.type.meta", "Choose the metadata cell type column:", choices = NULL), # default empty
+         column(6,
+                selectInput("cell.type.meta", "Choose the metadata cell type column:", choices = NULL),
                 actionButton("set_cell_type", "Set Cell Type Column"),
                 DT::dataTableOutput("cell_type_table")
          )
@@ -231,6 +244,12 @@ server <- function(input,output,session){
     updateSelectInput(session, "meta.subcluster", choices = metacols)
     
     showNotification("Data Loaded!", type = "message")
+  })
+  
+  # handle cancel button ----
+  observeEvent(input$cancel_button, {
+    resetLoadingButton("upload_data")
+    resetLoadingButton("cancel_button")
   })
   
   # handle file upload ----
