@@ -52,7 +52,7 @@ ui <- fluidPage(theme = shinytheme("yeti"),
                 fileInput("file_upload", "Upload dataset:", accept = c(".qs", ".h5Seurat")),
                 div(style = "margin-top: -30px"),
                 p("Please wait for data to finish upload before processing",
-                  style = "font-size: 10px; font-weight: bold; margin-top: 5px;"),
+                  style = "font-size: 10px; font-weight: bold; margin-top: 30px;"),
                 # buttons in the same row
                 fluidRow(
                   column(9,
