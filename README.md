@@ -21,7 +21,7 @@ This application requires the following:
 
 This application can be easily installed and run using **Docker**, ensuring a consistent and dependency-free setup across systems.
 
-1. **Clone the repository**:
+1. **Clone the repository**
    Open a terminal and run:
 
    ```bash
