@@ -85,11 +85,11 @@ ui <- fluidPage(theme = shinytheme("yeti"),
     # umap tab: all cell types -----
     tabPanel("UMAP",
        # title and description above everything ----
-       h3("Gene Expression Visualization with UMAP", 
+       h3("Gene Expression Visualization with UMAPs", 
           style = "font-weight: bold; font-size: 20px; color: #1E3A8A; text-align: center; margin-top: 20px; margin-bottom: 15px;"),
        
-       p("In this section, you can enter a gene of interest to visualize its expression across different cells using UMAP. 
-          The generated UMAP plot will show how the gene is distributed across the dataset, helping you to identify clusters or patterns of gene expression.",
+       p("In this section, you can enter a gene of interest to visualize its expression across different cells using UMAPs and a violin plot. 
+          The generated plots will show how the gene is distributed across the dataset, helping you to identify clusters or patterns of gene expression.",
          style = "font-size: 15px; color: #555; text-align: center; margin-bottom: 30px;"),
        
        # line break here
@@ -103,7 +103,8 @@ ui <- fluidPage(theme = shinytheme("yeti"),
           ),
           mainPanel(
             plotOutput("feature_plot"),  
-            plotOutput("umap_plot") 
+            plotOutput("umap_plot"),
+            plotOutput("violin_celltype_plot")
         )
       )
     ),
@@ -344,6 +345,11 @@ server <- function(input,output,session){
     # render the umap
     output$umap_plot <- renderPlot({
       generate_umap_plot(seurat_obj$data, seurat_obj$cell_type_column)  
+    })
+    
+    # render the violin plot
+    output$violin_celltype_plot <- renderPlot({
+      gene_across_cell_type(seurat_obj$data, gene_selected, seurat_obj$cell_type_column)  
     })
   })
   

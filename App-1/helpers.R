@@ -65,3 +65,9 @@ cell_type_count <- function(dataset, cell_type_col){
   colnames(cell_type_counts_df) <- c("Cell Type", "Cell Count")
   return(cell_type_counts_df)
 }
+
+# function to create plot of gene across cell types
+gene_across_cell_type <- function(dataset, gene, cell_col_meta) {
+  plot <- VlnPlot(dataset, features = gene, group.by = cell_col_meta)
+  return(plot)
+}
