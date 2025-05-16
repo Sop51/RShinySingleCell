@@ -22,13 +22,15 @@ This application requires the following:
 This application can be easily installed and run using **Docker**, ensuring a consistent and dependency-free setup across systems.
 
 1. **Clone the repository**
+
    Open a terminal and run:
 
    ```bash
    git clone https://github.com/sop51/RShinySingleCell.git
    cd RShinySingleCell/App-1
 
-2. **Build the Docker image**
+3. **Build the Docker image**
+   
    Run the following command in the project directory (App-1):
 
    💡 Note for Mac users: --platform flag will have to be specified in this command (linux/amd64 or linux/x86_64)
@@ -36,7 +38,7 @@ This application can be easily installed and run using **Docker**, ensuring a co
    ```bash
    docker build -t scRNAseq-shiny-app .
 
-3. **Run the application**
+5. **Run the application**
 
    ```bash
    docker run -p 3838:3838 scRNAseq-shiny-app
