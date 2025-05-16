@@ -1,5 +1,4 @@
 library(Seurat)
-library(SeuratDisk)
 library(ggplot2)
 
 # create a function to generate a feature plot for a certain gene

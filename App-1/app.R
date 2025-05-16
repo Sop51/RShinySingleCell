@@ -1,7 +1,6 @@
 library(shiny)
 library(bslib)
 library(Seurat)
-library(SeuratDisk)
 library(DT)
 library(rlang)
 library(shinythemes)
