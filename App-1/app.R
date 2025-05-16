@@ -16,6 +16,9 @@ source('helpers.R')
 data_dir <- "data"
 # increase the file upload size allowed
 options(shiny.maxRequestSize = 4000 * 1024^2)
+# specify an application port
+options(shiny.host = "0.0.0.0")
+options(shiny.port = 8180)
 
 
 # define the ui ----
@@ -40,7 +43,7 @@ ui <- fluidPage(theme = shinytheme("yeti"),
        p("To begin analysis, upload your annotated single cell dataset or select an existing dataset from the list below. Then, set the appropriate cell type column within the metadata for analysis.",
          style = "font-size: 15px; color: #555; text-align: center; margin-bottom: 20px;"),
        
-       p("Note: if uploading a file, file extension must be .qs or .h5Seurat",
+       p("Note: if uploading a file, file extension must be .qs",
          style = "font-weight: bold; font-size: 15px; color: #555; text-align: center; margin-bottom: 30px;"),
        
        # line break here
@@ -49,7 +52,7 @@ ui <- fluidPage(theme = shinytheme("yeti"),
        # main layout ----
        fluidRow(
          column(6,
-                fileInput("file_upload", "Upload dataset:", accept = c(".qs", ".h5Seurat")),
+                fileInput("file_upload", "Upload dataset:", accept = c(".qs")),
                 div(style = "margin-top: -30px"),
                 p("Please wait for data to finish upload before processing",
                   style = "font-size: 10px; font-weight: bold; margin-top: 30px;"),
@@ -67,7 +70,7 @@ ui <- fluidPage(theme = shinytheme("yeti"),
                   )
                 ),
                 selectInput("file", "OR choose a dataset:",
-                            choices = list.files(data_dir, pattern = "\\.qs$|\\.h5Seurat$", full.names = FALSE),
+                            choices = list.files(data_dir, pattern = "\\.qs$", full.names = FALSE),
                             selected = NULL),
                 loadingButton("load_data", "Load & Process Dataset",
                               style = "width: 71%; margin: 10px auto;")
@@ -228,8 +231,6 @@ server <- function(input,output,session){
     # load the dataset based on the file extension
     if (file_extension == "qs") {
       seurat_obj$data <- qread(dataset_path)  # Load .qs file
-    } else if (file_extension == "h5Seurat") {
-      seurat_obj$data <- LoadH5Seurat(dataset_path)  # Load .h5Seurat file
     }
     
     # reset loading button
