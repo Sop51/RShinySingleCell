@@ -1,5 +1,4 @@
 # 🧬 Single Cell RNA-seq Shiny App
-***
 
 This **RShiny** application was developed by the **Goessling Lab** to support members of the **zebrafish research community** in the analysis and visualization of single-cell RNA sequencing (scRNA-seq) data.
 
@@ -41,5 +40,4 @@ This application can be easily installed and run using **Docker**, ensuring a co
 
    ```bash
    docker run -p 3838:3838 scRNAseq-shiny-app
-
   
