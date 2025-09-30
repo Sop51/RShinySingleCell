@@ -27,7 +27,7 @@ This application can be easily installed and run using **Docker**, ensuring a co
 
    ```bash
    git clone https://github.com/sop51/RShinySingleCell.git
-   cd RShinySingleCell/App-1
+   cd RShinySingleCell/App-1/
 
 3. **Build the Docker image**
    
