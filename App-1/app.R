@@ -11,8 +11,6 @@ library(shinyBS)
 
 # source other R scripts
 source('helpers.R')
-# define the path to the data directory
-data_dir <- "data"
 # increase the file upload size allowed
 options(shiny.maxRequestSize = 4000 * 1024^2)
 # specify an application port
@@ -39,7 +37,7 @@ ui <- fluidPage(theme = shinytheme("yeti"),
        h3("Upload or Select Dataset", 
           style = "font-weight: bold; font-size: 20px; color: #1E3A8A; text-align: center; margin-top: 20px; margin-bottom: 15px;"),
        
-       p("To begin analysis, upload your annotated single cell dataset or select an existing dataset from the list below. Then, set the appropriate cell type column within the metadata for analysis.",
+       p("To begin analysis, upload your annotated single cell dataset or select an existing dataset from the list below. Wait for the data to load and process. Then, set the appropriate cell type column within the metadata for analysis.",
          style = "font-size: 15px; color: #555; text-align: center; margin-bottom: 20px;"),
        
        p("Note: if uploading a file, file extension must be .qs",
@@ -69,7 +67,7 @@ ui <- fluidPage(theme = shinytheme("yeti"),
                   )
                 ),
                 selectInput("file", "OR choose a dataset:",
-                            choices = list.files(data_dir, pattern = "\\.qs$", full.names = FALSE),
+                            choices = list.files("data", pattern = "\\.qs$", full.names = FALSE),
                             selected = NULL),
                 loadingButton("load_data", "Load & Process Dataset",
                               style = "width: 71%; margin: 10px auto;")
@@ -118,6 +116,9 @@ ui <- fluidPage(theme = shinytheme("yeti"),
        p("In this section, you can compare gene expression in the selected cell type to all other cell types in the dataset. 
        Use the controls to select a cell type and view the corresponding differential expression table for detailed insights.",
          style = "font-size: 15px; color: #555; text-align: center; margin-bottom: 30px;"),
+       
+       p("Note: You must select the cell type metadata column in the Import Data tab to use this feature",
+         style = "font-weight: bold; font-size: 15px; color: #555; text-align: center; margin-bottom: 30px;"),
        
        # line break here
        hr(style = "border: 1px solid #ccc; margin-top: 20px; margin-bottom: 20px;"), 
@@ -218,6 +219,22 @@ server <- function(input,output,session){
     # ensure input is not null
     req(input$file)
     
+    # Reset old data and metadata UI selections
+    seurat_obj$data <- NULL
+    seurat_obj$cell_type_column <- NULL
+    updateSelectInput(session, "cell.type.meta", choices = character(0), selected = NULL)
+    updateSelectInput(session, "cell.type.DE", choices = character(0), selected = NULL)
+    updateSelectInput(session, "cell.type.subcluster", choices = character(0), selected = NULL)
+    updateSelectInput(session, "meta.subcluster", choices = character(0), selected = NULL)
+    output$cell_type_table <- DT::renderDT({ NULL })
+    output$de_table <- DT::renderDT({ NULL })
+    output$feature_plot <- renderPlot({ NULL })
+    output$umap_plot <- renderPlot({ NULL })
+    output$violin_celltype_plot <- renderPlot({ NULL })
+    output$violin.subcluster <- renderPlot({ NULL })
+    output$umap.subcluster <- renderPlot({ NULL })
+    output$umap.gene.subcluster <- renderPlot({ NULL })
+    
     if (!dir.exists("data")) {
       dir.create("data", recursive = TRUE)
     }
@@ -257,6 +274,22 @@ server <- function(input,output,session){
   observeEvent(input$upload_data, {
     req(input$file_upload)  # ensure a file is uploaded
     
+    # Reset old data and metadata UI selections
+    seurat_obj$data <- NULL
+    seurat_obj$cell_type_column <- NULL
+    updateSelectInput(session, "cell.type.meta", choices = character(0), selected = NULL)
+    updateSelectInput(session, "cell.type.DE", choices = character(0), selected = NULL)
+    updateSelectInput(session, "cell.type.subcluster", choices = character(0), selected = NULL)
+    updateSelectInput(session, "meta.subcluster", choices = character(0), selected = NULL)
+    output$cell_type_table <- DT::renderDT({ NULL })
+    output$de_table <- DT::renderDT({ NULL })
+    output$feature_plot <- renderPlot({ NULL })
+    output$umap_plot <- renderPlot({ NULL })
+    output$violin_celltype_plot <- renderPlot({ NULL })
+    output$violin.subcluster <- renderPlot({ NULL })
+    output$umap.subcluster <- renderPlot({ NULL })
+    output$umap.gene.subcluster <- renderPlot({ NULL })
+    
     if (!dir.exists("data")) {
       dir.create("data", recursive = TRUE)
     }
@@ -266,7 +299,7 @@ server <- function(input,output,session){
     file_name <- input$file_upload$name
     
     # save the uploaded file to the directory
-    saved_file_path <- file.path(data_dir, file_name)
+    saved_file_path <- file.path("data/", file_name)
     file.copy(file_path, saved_file_path, overwrite = TRUE)
     
     # check the file extension
@@ -278,6 +311,10 @@ server <- function(input,output,session){
     } else if (file_extension == "h5Seurat") {
       seurat_obj$data <- LoadH5Seurat(saved_file_path)  # Load .h5Seurat file
     }
+    
+    # update the files in the drop down to include the updated file
+    files_in_dir <- list.files("data", pattern = "\\.qs$", full.names = FALSE)
+    updateSelectInput(session, "file", choices = files_in_dir, selected = file_name)
     
     # reset loading button
     resetLoadingButton("upload_data")
@@ -292,6 +329,7 @@ server <- function(input,output,session){
   
     # update the selectInput choices to include the newly uploaded file
     showNotification("File uploaded successfully!", type = "message")
+    
   })
   
   # store cell type column ----
