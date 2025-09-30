@@ -36,10 +36,10 @@ This application can be easily installed and run using **Docker**, ensuring a co
    💡 Note for Mac users: --platform flag will have to be specified in this command (linux/amd64 or linux/x86_64)
 
    ```bash
-   docker build -t scRNAseq-shiny-app .
+   docker build -t scrnaseq-shiny-app .
 
 5. **Run the application**
 
    ```bash
-   docker run -p 3838:3838 scRNAseq-shiny-app
+   docker run -p 3838:3838 scrnaseq-shiny-app
   
