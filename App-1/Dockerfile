@@ -16,6 +16,9 @@ RUN mkdir /home/single-cell-shiny-app/www
 # install R dependencies
 RUN R -e "install.packages(c('Seurat', 'bslib', 'DT', 'rlang', 'shinythemes', 'shinyFeedback', 'rsconnect', 'qs', 'shinyBS', 'ggplot2'))"
 
+# install presto from GitHub
+RUN R -e "devtools::install_github('immunogenomics/presto')"
+
 # copy the shiny app code
 COPY app.R /home/single-cell-shiny-app/app.R
 COPY helpers.R /home/single-cell-shiny-app/helpers.R
