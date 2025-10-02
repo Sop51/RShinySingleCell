@@ -67,7 +67,7 @@ ui <- fluidPage(theme = shinytheme("yeti"),
                   )
                 ),
                 selectInput("file", "OR choose a dataset:",
-                            choices = list.files("data", pattern = "\\.qs$", full.names = FALSE),
+                            choices = list.files("/mnt/s3-bucket/data", pattern = "\\.qs$", full.names = FALSE),
                             selected = NULL),
                 loadingButton("load_data", "Load & Process Dataset",
                               style = "width: 71%; margin: 10px auto;")
@@ -235,12 +235,8 @@ server <- function(input,output,session){
     output$umap.subcluster <- renderPlot({ NULL })
     output$umap.gene.subcluster <- renderPlot({ NULL })
     
-    if (!dir.exists("data")) {
-      dir.create("data", recursive = TRUE)
-    }
-    
     # get the file path of the chosen dataset
-    dataset_path <- file.path("data/", input$file)
+    dataset_path <- file.path("/mnt/s3-bucket/data", input$file)
     
     # check the file extension
     file_extension <- tools::file_ext(dataset_path)
@@ -290,16 +286,12 @@ server <- function(input,output,session){
     output$umap.subcluster <- renderPlot({ NULL })
     output$umap.gene.subcluster <- renderPlot({ NULL })
     
-    if (!dir.exists("data")) {
-      dir.create("data", recursive = TRUE)
-    }
-    
     # get the file path and name of the uploaded file
     file_path <- input$file_upload$datapath
     file_name <- input$file_upload$name
     
     # save the uploaded file to the directory
-    saved_file_path <- file.path("data/", file_name)
+    saved_file_path <- file.path("/mnt/s3-bucket/data", file_name)
     file.copy(file_path, saved_file_path, overwrite = TRUE)
     
     # check the file extension
@@ -313,7 +305,7 @@ server <- function(input,output,session){
     }
     
     # update the files in the drop down to include the updated file
-    files_in_dir <- list.files("data", pattern = "\\.qs$", full.names = FALSE)
+    files_in_dir <- list.files("/mnt/s3-bucket/data", pattern = "\\.qs$", full.names = FALSE)
     updateSelectInput(session, "file", choices = files_in_dir, selected = file_name)
     
     # reset loading button
