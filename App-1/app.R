@@ -34,14 +34,11 @@ ui <- fluidPage(theme = shinytheme("yeti"),
     tabPanel("Import Data",
              
        # title and description above everything ----
-       h3("Upload or Select Dataset", 
+       h3("Select Dataset", 
           style = "font-weight: bold; font-size: 20px; color: #1E3A8A; text-align: center; margin-top: 20px; margin-bottom: 15px;"),
        
-       p("To begin analysis, upload your annotated single cell dataset or select an existing dataset from the list below. Wait for the data to load and process. Then, set the appropriate cell type column within the metadata for analysis.",
+       p("To begin analysis, select a dataset from the list below. Wait for the data to load and process. Then, set the appropriate cell type column within the metadata for analysis.",
          style = "font-size: 15px; color: #555; text-align: center; margin-bottom: 20px;"),
-       
-       p("Note: if uploading a file, file extension must be .qs",
-         style = "font-weight: bold; font-size: 15px; color: #555; text-align: center; margin-bottom: 30px;"),
        
        # line break here
        hr(style = "border: 1px solid #ccc; margin-top: 20px; margin-bottom: 20px;"), 
@@ -49,24 +46,7 @@ ui <- fluidPage(theme = shinytheme("yeti"),
        # main layout ----
        fluidRow(
          column(6,
-                fileInput("file_upload", "Upload dataset:", accept = c(".qs")),
-                div(style = "margin-top: -30px"),
-                p("Please wait for data to finish upload before processing",
-                  style = "font-size: 10px; font-weight: bold; margin-top: 30px;"),
-                # buttons in the same row
-                fluidRow(
-                  column(9,
-                         loadingButton("upload_data", "Process Dataset for Analysis",
-                                       style = "width: 100%; margin: 8px 0;")
-                  ),
-                  column(3,
-                         div(style = "margin-left: -20px; margin-top: 20px;",
-                             loadingButton("cancel_button", "Cancel",
-                                           style = "width: 70%; font-size: 11px; padding: 4px 6px; background-color: #f8d7da; color: #721c24; border-color: #f5c6cb;")
-                         )
-                  )
-                ),
-                selectInput("file", "OR choose a dataset:",
+                selectInput("file", "Choose a dataset:",
                             choices = list.files("/mnt/s3-bucket/data", pattern = "\\.qs$", full.names = FALSE),
                             selected = NULL),
                 loadingButton("load_data", "Load & Process Dataset",
@@ -264,64 +244,6 @@ server <- function(input,output,session){
   observeEvent(input$cancel_button, {
     resetLoadingButton("upload_data")
     resetLoadingButton("cancel_button")
-  })
-  
-  # handle file upload ----
-  observeEvent(input$upload_data, {
-    req(input$file_upload)  # ensure a file is uploaded
-    
-    # Reset old data and metadata UI selections
-    seurat_obj$data <- NULL
-    seurat_obj$cell_type_column <- NULL
-    updateSelectInput(session, "cell.type.meta", choices = character(0), selected = NULL)
-    updateSelectInput(session, "cell.type.DE", choices = character(0), selected = NULL)
-    updateSelectInput(session, "cell.type.subcluster", choices = character(0), selected = NULL)
-    updateSelectInput(session, "meta.subcluster", choices = character(0), selected = NULL)
-    output$cell_type_table <- DT::renderDT({ NULL })
-    output$de_table <- DT::renderDT({ NULL })
-    output$feature_plot <- renderPlot({ NULL })
-    output$umap_plot <- renderPlot({ NULL })
-    output$violin_celltype_plot <- renderPlot({ NULL })
-    output$violin.subcluster <- renderPlot({ NULL })
-    output$umap.subcluster <- renderPlot({ NULL })
-    output$umap.gene.subcluster <- renderPlot({ NULL })
-    
-    # get the file path and name of the uploaded file
-    file_path <- input$file_upload$datapath
-    file_name <- input$file_upload$name
-    
-    # save the uploaded file to the directory
-    saved_file_path <- file.path("/mnt/s3-bucket/data", file_name)
-    file.copy(file_path, saved_file_path, overwrite = TRUE)
-    
-    # check the file extension
-    file_extension <- tools::file_ext(saved_file_path)
-    
-    # load the dataset based on the file extension
-    if (file_extension == "qs") {
-      seurat_obj$data <- qread(saved_file_path)  # Load .qs file
-    } else if (file_extension == "h5Seurat") {
-      seurat_obj$data <- LoadH5Seurat(saved_file_path)  # Load .h5Seurat file
-    }
-    
-    # update the files in the drop down to include the updated file
-    files_in_dir <- list.files("/mnt/s3-bucket/data", pattern = "\\.qs$", full.names = FALSE)
-    updateSelectInput(session, "file", choices = files_in_dir, selected = file_name)
-    
-    # reset loading button
-    resetLoadingButton("upload_data")
-    
-    # get the metadata cols
-    metacols <- colnames(seurat_obj$data@meta.data)
-    # update the cell type selection input
-    updateSelectInput(session, "cell.type.meta", choices = metacols)
-    
-    # update the group by col in the subcluster tab
-    updateSelectInput(session, "meta.subcluster", choices = metacols)
-  
-    # update the selectInput choices to include the newly uploaded file
-    showNotification("File uploaded successfully!", type = "message")
-    
   })
   
   # store cell type column ----
