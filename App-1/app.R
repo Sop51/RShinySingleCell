@@ -30,32 +30,122 @@ ui <- fluidPage(theme = shinytheme("yeti"),
   div(style = "height: 20px;"), # add spacing
   
   tabsetPanel(
+    id = "tabs",
+    # how to tab ----
+    tabPanel("How To",
+             
+      # title for how to video ----
+      h3("How to Video",
+          style = "font-weight: bold; font-size: 20px; color: #1E3A8A; 
+            text-align: center; margin-top: 20px; margin-bottom: 15px;"),
+      
+      # youtube video ----
+      div(
+        style = "position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden;",
+        tags$iframe(
+          src = "https://www.youtube.com/embed/xBjEfo02og8?si=-VK404u21xj4-2hW",
+          style = "position:absolute; top:0; left:0; width:100%; height:100%;",
+          frameborder = "0",
+          allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture",
+          allowfullscreen = NA
+        )
+      ),
+      
+      # upload data title ----
+      h3("Thinking of uploading data? Please review the requirements:",
+         style = "font-weight: bold; font-size: 20px; color: #1E3A8A; 
+            text-align: center; margin-top: 20px; margin-bottom: 15px;"),
+      tags$ul(
+        style = "font-size: 15px; color: #555; text-align: left; 
+           margin: 0 auto; width: 80%; line-height: 1.4;",
+        tags$li("Dataset must be a Seurat object created using Seurat v5.3.0."),
+        tags$li("The object must be saved and uploaded as a .qs file."),
+        tags$li("Cell type annotations must be present in the meta.data slot and contain valid labels."),
+        tags$li("Raw counts or normalized expression values must be included."),
+        tags$li("Dimensionality reductions (e.g., PCA, UMAP) must already be computed."),
+      ),
+      
+      # title for contact/github info ----
+      h3("Need to get in contact with us?",
+         style = "font-weight: bold; font-size: 20px; color: #1E3A8A; 
+            text-align: center; margin-top: 20px; margin-bottom: 15px;"),
+      
+      p("Please reach out to smarcotte2@mgh.harvard.edu",
+        style = "font-size: 15px; color: #555; text-align: center; margin-bottom: 20px;"),
+      
+      div(
+        style = "text-align: center; margin-top: 20px;",
+        tags$p(
+          "Repo link:",
+          style = "font-size: 14px; color: #555; margin-bottom: 5px;"
+        ),
+        tags$a(
+          href = "https://github.com/Sop51/RShinySingleCell/",
+          target = "_blank",
+          tags$i(class = "fa fa-github", style = "margin-right: 6px;"),
+          "RShinySingleCell"
+        )
+      )
+      
+    ),
     # data import tab ----
     tabPanel("Import Data",
              
        # title and description above everything ----
-       h3("Select Dataset", 
+       h3("Select and Load a Dataset", 
           style = "font-weight: bold; font-size: 20px; color: #1E3A8A; text-align: center; margin-top: 20px; margin-bottom: 15px;"),
        
-       p("To begin analysis, select a dataset from the list below. Wait for the data to load and process. Then, set the appropriate cell type column within the metadata for analysis.",
+       p("To begin, select a dataset from the list below. Wait for the data to load and process. Then, set the appropriate cell type annotations within the metadata.",
          style = "font-size: 15px; color: #555; text-align: center; margin-bottom: 20px;"),
        
        # line break here
        hr(style = "border: 1px solid #ccc; margin-top: 20px; margin-bottom: 20px;"), 
-             
+       
+       # fix wrapping within the file drop down list for long file names ----
+       tags$head(
+         tags$style(HTML("
+           .selectize-dropdown-content .option,
+           .selectize-dropdown-content .item {
+             white-space: normal !important;
+             word-wrap: break-word !important;
+           }
+
+           .selectize-input > div {
+             white-space: normal !important;
+             word-wrap: break-word !important;
+             overflow-wrap: break-word !important;
+             max-width: 100% !important;   
+           }
+
+           .selectize-input {
+             height: auto !important;
+             min-height: 38px;
+             width: 100% !important;  
+           }
+        "))
+       ),
+       
        # main layout ----
        fluidRow(
          column(6,
-                selectInput("file", "Choose a dataset:",
-                            choices = list.files("data", pattern = "\\.qs$", full.names = FALSE),
+                selectInput("file", "1. Choose a dataset:",
+                            choices = list.files("/home/single-cell-shiny-app/data", pattern = "\\.qs$"),
                             selected = NULL),
                 loadingButton("load_data", "Load & Process Dataset",
                               style = "width: 71%; margin: 10px auto;")
          ),
          column(6,
-                selectInput("cell.type.meta", "Choose the metadata cell type column:", choices = NULL),
-                actionButton("set_cell_type", "Set Cell Type Column"),
-                DT::dataTableOutput("cell_type_table")
+                selectInput("cell.type.meta", "2. Choose the cell type annotation label:", choices = NULL),
+                actionButton("set_cell_type", "Set Cell Annotations"),
+                tags$i(class = "fa fa-info-circle", 
+                       id = "info_cell_col", 
+                       style = "margin-left: 5px; cursor: pointer; font-size: 16px; color: #007BFF;"),
+                DT::dataTableOutput("cell_type_table"),
+                
+                # Tooltip for the radio button info icon
+                bsTooltip("info_cell_col", 
+                          "Choose the label in your single cell object that represents the cell type annotations",
+                          placement = "right", trigger = "hover")
          )
        ),
     ),
@@ -66,8 +156,7 @@ ui <- fluidPage(theme = shinytheme("yeti"),
        h3("Gene Expression Visualization with UMAPs", 
           style = "font-weight: bold; font-size: 20px; color: #1E3A8A; text-align: center; margin-top: 20px; margin-bottom: 15px;"),
        
-       p("In this section, you can enter a gene of interest to visualize its expression across different cells using UMAPs and a violin plot. 
-          The generated plots will show how the gene is distributed across the dataset, helping you to identify clusters or patterns of gene expression.",
+       p("Enter a gene of interest to visualize its expression across different cell types.",
          style = "font-size: 15px; color: #555; text-align: center; margin-bottom: 30px;"),
        
        # line break here
@@ -76,7 +165,7 @@ ui <- fluidPage(theme = shinytheme("yeti"),
        # main layout - sidebar and main panel ----      
       sidebarLayout(
         sidebarPanel(
-          textInput("gene", "Enter a gene of interest:", placeholder = "Type gene name..."),
+          textInput("gene", "Enter a gene of interest (case sensitive):", placeholder = "Type gene name..."),
           actionButton("generate_umaps", "Generate UMAPs") 
           ),
           mainPanel(
@@ -88,17 +177,13 @@ ui <- fluidPage(theme = shinytheme("yeti"),
     ),
     
     # differential expression table: all cell types ----
-    tabPanel("Differential Expression",
+    tabPanel("Marker Gene Analysis",
        # title and description above everything ----
-       h3("Differential Expression Analysis", 
+       h3("Differential Expression Between Cell Types", 
           style = "font-weight: bold; font-size: 20px; color: #1E3A8A; text-align: center; margin-top: 20px; margin-bottom: 15px;"),
        
-       p("In this section, you can compare gene expression in the selected cell type to all other cell types in the dataset. 
-       Use the controls to select a cell type and view the corresponding differential expression table for detailed insights.",
+       p("Compare gene expression in the selected cell type to all other cell types in the dataset.",
          style = "font-size: 15px; color: #555; text-align: center; margin-bottom: 30px;"),
-       
-       p("Note: You must select the cell type metadata column in the Import Data tab to use this feature",
-         style = "font-weight: bold; font-size: 15px; color: #555; text-align: center; margin-bottom: 30px;"),
        
        # line break here
        hr(style = "border: 1px solid #ccc; margin-top: 20px; margin-bottom: 20px;"), 
@@ -132,12 +217,9 @@ ui <- fluidPage(theme = shinytheme("yeti"),
      h3("Cell Type Specific Analysis", 
         style = "font-weight: bold; font-size: 20px; color: #1E3A8A; text-align: center; margin-top: 20px; margin-bottom: 15px;"),
      
-     p("This section allows you to explore gene expression patterns for specific cell types. 
-        Choose a cell type, enter a gene of interest, and customize the data groupings to visualize the results.",
+     p("Explore gene expression patterns for specific cell types. 
+        Choose a cell type, enter a gene of interest, and customize the data groupings to visualize.",
        style = "font-size: 15px; color: #555; text-align: center; margin-bottom: 20px;"),
-     
-     p("Note: You must select the cell type metadata column in the Import Data tab to use this feature",
-       style = "font-weight: bold; font-size: 15px; color: #555; text-align: center; margin-bottom: 30px;"),
      
      # line break here
      hr(style = "border: 1px solid #ccc; margin-top: 20px; margin-bottom: 20px;"), 
@@ -146,7 +228,7 @@ ui <- fluidPage(theme = shinytheme("yeti"),
       sidebarLayout(
         sidebarPanel(
           selectInput("cell.type.subcluster", "Choose a cell type:", choices = NULL), # default empty
-          textInput("gene.subcluster", "Enter a gene of interest:", placeholder = "Type gene name..."),
+          textInput("gene.subcluster", "Enter a gene of interest (case sensitive):", placeholder = "Type gene name..."),
           # Wrap the radio button and info icon together for alignment
           tags$div(
             style = "display: flex; align-items: center;",
@@ -168,7 +250,7 @@ ui <- fluidPage(theme = shinytheme("yeti"),
           # wrap the dropdown and info icon together for alignment
           tags$div(
             style = "display: flex; align-items: center;",
-            selectInput("meta.subcluster", "Choose a metadata column to group by:", choices = NULL), # default empty
+            selectInput("meta.subcluster", "Choose a metadata label to group by:", choices = NULL), # default empty
             tags$i(class = "fa fa-info-circle", 
                    id = "info_meta", 
                    style = "margin-left: 5px; cursor: pointer; font-size: 16px; color: #007BFF;")
@@ -216,7 +298,7 @@ server <- function(input,output,session){
     output$umap.gene.subcluster <- renderPlot({ NULL })
     
     # get the file path of the chosen dataset
-    dataset_path <- file.path("data", input$file)
+    dataset_path <- file.path("/home/single-cell-shiny-app/data", input$file)
     
     # check the file extension
     file_extension <- tools::file_ext(dataset_path)
@@ -365,7 +447,63 @@ server <- function(input,output,session){
       generate_subcluster_featureplot(subset, gene_selected)
     })
   })
+  
+  # control tab visibility ----
+  data_loaded <- reactiveVal(FALSE)
+  cell_type_set <- reactiveVal(FALSE)
+  
+  # check if data is loaded
+  observeEvent(input$load_data, {
+    data_loaded(TRUE)
+  })
+  
+  # check if data loaded AND cell type col is set
+  observeEvent(input$set_cell_type, {
+    if (data_loaded()) {
+      cell_type_set(TRUE)
+    }
+  })
+  
+  # prevent switching tabs until both dataset is loaded and column is set 
+  observeEvent(input$tabs, {
+    
+    # allowed tabs before required data is set
+    allowed_tabs_before_ready <- c("How To", "Import Data")
+    
+    if (input$tabs %in% allowed_tabs_before_ready) return()
+    
+    # block if BOTH are not set
+    if (!data_loaded() && !cell_type_set()){
+      showNotification(
+        "Please load a dataset and set the cell type column.",
+        type = "error", duration = 4
+      )
+      updateTabsetPanel(session, "tabs", selected = "Import Data")
+      return()
+    }
+    
+    # block if ONLY data not loaded
+    if (!data_loaded()) {
+      showNotification(
+        "Please import and load a dataset.",
+        type = "error", duration = 4
+      )
+      updateTabsetPanel(session, "tabs", selected = "Import Data")
+      return()
+    }
+    
+    # block if ONLY cell type not set
+    if (!cell_type_set()) {
+      showNotification(
+        "Please set the cell type annotation label.",
+        type = "error", duration = 4
+      )
+      updateTabsetPanel(session, "tabs", selected = "Import Data")
+      return()
+    }
+  })
 }
+
 
 # run the app ----
 shinyApp(ui = ui, server = server)
