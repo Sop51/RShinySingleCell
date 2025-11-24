@@ -4,7 +4,7 @@ This **RShiny** application was developed by the **Goessling Lab** to support me
 
 The tool provides an intuitive interface that enables users to:
 
-- 📁 Upload and explore their own scRNA-seq datasets  
+- 📁 Explore scRNA-seq datasets  
 - 📊 Generate UMAP visualizations for genes of interest  
 - 🧪 Perform differential expression analyses between cell types  
 - 🔍 Investigate gene expression patterns within specific cell populations  
