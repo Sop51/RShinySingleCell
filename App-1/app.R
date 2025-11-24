@@ -47,7 +47,7 @@ ui <- fluidPage(theme = shinytheme("yeti"),
        fluidRow(
          column(6,
                 selectInput("file", "Choose a dataset:",
-                            choices = list.files("/home/single-cell-shiny-app/data", pattern = "\\.qs$", full.names = FALSE),
+                            choices = list.files("data", pattern = "\\.qs$", full.names = FALSE),
                             selected = NULL),
                 loadingButton("load_data", "Load & Process Dataset",
                               style = "width: 71%; margin: 10px auto;")
@@ -216,7 +216,7 @@ server <- function(input,output,session){
     output$umap.gene.subcluster <- renderPlot({ NULL })
     
     # get the file path of the chosen dataset
-    dataset_path <- file.path("/home/single-cell-shiny-app/data", input$file)
+    dataset_path <- file.path("data", input$file)
     
     # check the file extension
     file_extension <- tools::file_ext(dataset_path)
