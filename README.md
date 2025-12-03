@@ -9,7 +9,7 @@ The tool provides an intuitive interface that enables users to:
 - 🧪 Perform differential expression analyses between cell types  
 - 🔍 Investigate gene expression patterns within specific cell populations  
 
-Designed to facilitate discovery and data-driven insights, this application empowers researchers to interactively explore cellular and transcriptional dynamics**.
+Designed to facilitate discovery and data-driven insights, this application empowers researchers to interactively explore cellular and transcriptional dynamics.
 
 ## Requirements
 
